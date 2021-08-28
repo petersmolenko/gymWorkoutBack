@@ -54,11 +54,11 @@ class WorkoutPart(models.Model):
 
 class Workout(models.Model):
     title = models.CharField(max_length=50, unique=True)
-    description = models.TextField()
+    description = models.TextField(blank=True)
     workout_parts = models.ManyToManyField(WorkoutPart, blank=True)
     completed = models.BooleanField()
     in_process = models.BooleanField()
-    date = models.DateField()
+    date = models.DateField(auto_now_add=True, blank=True)
 
 
     def __str__(self):
