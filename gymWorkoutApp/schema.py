@@ -1,16 +1,24 @@
 import graphene
 from graphene_django import DjangoObjectType
-from .models import Workout, WorkoutPart
+from .models import Workout, WorkoutPart, Exercise
 
 
 class WorkoutType(DjangoObjectType):
     class Meta:
         model = Workout
 
+class WorkoutPartType(DjangoObjectType):
+    class Meta:
+        model = WorkoutPart
 
-# Workouts queries
 class Query(graphene.ObjectType):
+    # Workout parts queries
+    workout_parts_by_workout = graphene.List(WorkoutPartType, id=graphene.ID())
+
+    def resolve_workout_parts_by_workout(self, info, id):
+        return Workout.objects.get(pk=id).workout_parts.all()
     
+    # Workouts queries
     workouts = graphene.List(WorkoutType)
     completed_workouts = graphene.List(WorkoutType)
     active_workout = graphene.Field(WorkoutType)
@@ -24,7 +32,7 @@ class Query(graphene.ObjectType):
     def resolve_completed_workouts(self, info, **kwargs):
         return Workout.objects.filter(completed=True)
 
-# Workouts queries
+# Workouts mutations
 
 def set_workout_parts(workout, workout_parts_ids):
     workout_parts_set = []
@@ -147,10 +155,119 @@ class AddWorkoutPartToWorkout(graphene.Mutation):
       workout=workout
     )
 
+
+# Workout parts mutations
+
+class CreateWorkoutPart(graphene.Mutation):
+  class Arguments:
+    title = graphene.String()
+    description = graphene.String()
+    exercise = graphene.ID()
+    weight = graphene.Float()
+    repetitions_number = graphene.Int()
+    sort_order = graphene.Int()
+    completed = graphene.Boolean()
+
+  workoutPart = graphene.Field(WorkoutPartType)
+
+  def mutate(
+      self,
+      info,
+      title,
+      description,
+      exercise,
+      weight=0,
+      repetitions_number=0,
+      sort_order=0,
+      completed=False,
+    ):
+    workoutPart = WorkoutPart.objects.create(
+      title = title,
+      description = description,
+      weight = weight,
+      repetitions_number = repetitions_number,
+      sort_order = sort_order,
+      completed = completed,
+      exercise = Exercise.objects.get(pk=exercise)
+    )
+
+    workoutPart.save()
+
+    return CreateWorkoutPart(
+      workoutPart=workoutPart
+    )
+
+class UpdateWorkoutPart(graphene.Mutation):
+  class Arguments:
+    id = graphene.ID()
+    title = graphene.String()
+    description = graphene.String()
+    exercise = graphene.ID()
+    weight = graphene.Float()
+    repetitions_number = graphene.Int()
+    sort_order = graphene.Int()
+    completed = graphene.Boolean()
+
+  workoutPart = graphene.Field(WorkoutPartType)
+
+  def mutate(
+      self,
+      info,
+      id,
+      title=None,
+      description=None,
+      exercise=None,
+      weight=None,
+      repetitions_number=None,
+      sort_order=None,
+      completed=False,
+    ):
+    workoutPart = WorkoutPart.objects.get(pk=id)
+   
+    workoutPart.title = title if title is not None else workoutPart.title
+    workoutPart.description = description if description is not None else workoutPart.description
+    workoutPart.exercise = Exercise.objects.get(pk=exercise) if exercise is not None else workoutPart.exercise
+    workoutPart.weight = weight if weight is not None else workoutPart.weight
+    workoutPart.repetitions_number = repetitions_number if repetitions_number is not None else workoutPart.repetitions_number
+    workoutPart.sort_order = sort_order if sort_order is not None else workoutPart.sort_order
+    workoutPart.completed = completed if completed is not None else workoutPart.completed
+    
+    workoutPart.save()
+
+    return UpdateWorkoutPart(
+      workoutPart=workoutPart
+    )
+
+class DeleteWorkoutPart(graphene.Mutation):
+  class Arguments:
+    id = graphene.ID()
+
+  ok = graphene.Boolean()
+
+  def mutate(
+      self,
+      info,
+      id
+    ):
+    try:
+      workoutPart = WorkoutPart.objects.get(pk=id)
+
+      if workoutPart is not None:
+          workoutPart.delete()
+          return DeleteWorkoutPart(ok=True)
+    except:
+        return DeleteWorkoutPart(ok=False)
+    
+
+    return DeleteWorkoutPart(ok=False)
+
 class Mutation(graphene.ObjectType):
   create_workout = CreateWorkout.Field()
   update_workout = UpdateWorkout.Field()
   delete_workout = DeleteWorkout.Field()
   add_workout_part_to_workout = AddWorkoutPartToWorkout.Field()
 
+  create_workout_part = CreateWorkoutPart.Field()
+  update_workout_part = UpdateWorkoutPart.Field()
+  delete_workout_part = DeleteWorkoutPart.Field()
 schema = graphene.Schema(query=Query, mutation=Mutation)
