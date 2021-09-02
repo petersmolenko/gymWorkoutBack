@@ -1,6 +1,7 @@
 import graphene
 from graphene_django import DjangoObjectType
-from .models import Workout, WorkoutPart, Exercise, TrainingApparatus
+from graphene_file_upload.scalars import Upload
+from .models import Workout, WorkoutPart, Exercise, TrainingApparatus, Profile
 
 
 class WorkoutType(DjangoObjectType):
@@ -15,7 +16,27 @@ class ExerciseType(DjangoObjectType):
     class Meta:
         model = Exercise
 
+class TrainingApparatusType(DjangoObjectType):
+    class Meta:
+        model = TrainingApparatus
+
+class ProfileType(DjangoObjectType):
+    class Meta:
+        model = Profile
+
 class Query(graphene.ObjectType):
+  # Profile queries
+    profile = graphene.Field(ProfileType, username=graphene.String())
+    def resolve_profile(root, info, username):
+          return Profile.objects.select_related("user").get(
+              user__username=username
+          )
+  # TrainingApparatus queries
+    trainingApparatus = graphene.List(TrainingApparatusType)
+
+    def resolve_training_apparatus(self, info, **kwargs):
+        return TrainingApparatus.objects.all()
+
     # Exercise queries
     exercises = graphene.List(ExerciseType)
 
@@ -364,6 +385,81 @@ class DeleteExercise(graphene.Mutation):
     
     return DeleteExercise(ok=False)
 
+
+# TrainingApparatus mutations
+
+class CreateTrainingApparatus(graphene.Mutation):
+  class Arguments:
+    title = graphene.String()
+    cover = Upload()
+
+  training_apparatus = graphene.Field(TrainingApparatusType)
+
+  def mutate(
+      self,
+      info,
+      cover,
+      title,
+    ):
+    training_apparatus = TrainingApparatus.objects.create(
+      title = title,
+      cover = cover
+    )
+
+    training_apparatus.save()
+
+    return CreateTrainingApparatus(
+      training_apparatus=training_apparatus
+    )
+
+class UpdateTrainingApparatus(graphene.Mutation):
+  class Arguments:
+    id = graphene.ID()
+    title = graphene.String()
+    cover = Upload()
+
+  training_apparatus = graphene.Field(TrainingApparatusType)
+
+  def mutate(
+      self,
+      info,
+      id,
+      title=None,
+      cover=None,
+    ):
+    training_apparatus = TrainingApparatus.objects.get(pk=id)
+   
+    training_apparatus.title = title if title is not None else training_apparatus.title
+    training_apparatus.cover = cover if cover is not None else training_apparatus.cover
+    
+    training_apparatus.save()
+
+    return UpdateTrainingApparatus(
+      training_apparatus=training_apparatus
+    )
+
+class DeleteTrainingApparatus(graphene.Mutation):
+  class Arguments:
+    id = graphene.ID()
+
+  ok = graphene.Boolean()
+
+  def mutate(
+      self,
+      info,
+      id
+    ):
+    try:
+      training_apparatus = TrainingApparatus.objects.get(pk=id)
+
+      if training_apparatus is not None:
+          training_apparatus.delete()
+          return DeleteTrainingApparatus(ok=True)
+    except:
+        return DeleteTrainingApparatus(ok=False)
+    
+    return DeleteTrainingApparatus(ok=False)
+
 class Mutation(graphene.ObjectType):
   # Workout
   create_workout = CreateWorkout.Field()
@@ -378,4 +474,9 @@ class Mutation(graphene.ObjectType):
   create_exercise = CreateExercise.Field()
   update_exercise = UpdateExercise.Field()
   delete_exercise = DeleteExercise.Field()
+  # TrainingApparatus
+  create_training_apparatus = CreateTrainingApparatus.Field()
+  update_training_apparatus = UpdateTrainingApparatus.Field()
+  delete_training_apparatus = DeleteTrainingApparatus.Field()
+
 schema = graphene.Schema(query=Query, mutation=Mutation)
