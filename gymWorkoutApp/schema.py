@@ -32,7 +32,7 @@ class Query(graphene.ObjectType):
               user__username=username
           )
   # TrainingApparatus queries
-    trainingApparatus = graphene.List(TrainingApparatusType)
+    training_apparatus = graphene.List(TrainingApparatusType)
 
     def resolve_training_apparatus(self, info, **kwargs):
         return TrainingApparatus.objects.all()
