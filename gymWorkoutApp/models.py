@@ -15,6 +15,7 @@ class Profile(models.Model):
 
 class TrainingApparatus(models.Model):
     title = models.CharField(max_length=50, unique=True)
+    description = models.TextField(default='')
     cover = models.ImageField(upload_to='images/')
 
     def __str__(self):

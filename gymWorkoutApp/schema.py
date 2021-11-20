@@ -37,11 +37,22 @@ class Query(graphene.ObjectType):
     def resolve_training_apparatus(self, info, **kwargs):
         return TrainingApparatus.objects.all()
 
+
+    training_thing = graphene.Field(TrainingApparatusType, id=graphene.ID())
+
+    def resolve_training_thing(self, info, id):
+        return TrainingApparatus.objects.get(pk=id)
+
     # Exercise queries
     exercises = graphene.List(ExerciseType)
 
     def resolve_exercises(self, info, **kwargs):
         return Exercise.objects.all()
+
+    exercise = graphene.Field(ExerciseType, id=graphene.ID())
+
+    def resolve_exercise(self, info, id):
+        return Exercise.objects.get(pk=id)
 
     # Workout parts queries
     workout_parts_by_workout = graphene.List(WorkoutPartType, id=graphene.ID())
