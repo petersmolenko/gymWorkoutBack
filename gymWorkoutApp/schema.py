@@ -32,15 +32,15 @@ class Query(graphene.ObjectType):
               user__username=username
           )
   # TrainingApparatus queries
-    training_apparatus = graphene.List(TrainingApparatusType)
+    trainers = graphene.List(TrainingApparatusType)
 
-    def resolve_training_apparatus(self, info, **kwargs):
+    def resolve_trainers(self, info, **kwargs):
         return TrainingApparatus.objects.all()
 
 
-    training_thing = graphene.Field(TrainingApparatusType, id=graphene.ID())
+    trainer = graphene.Field(TrainingApparatusType, id=graphene.ID())
 
-    def resolve_training_thing(self, info, id):
+    def resolve_trainer(self, info, id):
         return TrainingApparatus.objects.get(pk=id)
 
     # Exercise queries
@@ -402,6 +402,7 @@ class DeleteExercise(graphene.Mutation):
 class CreateTrainingApparatus(graphene.Mutation):
   class Arguments:
     title = graphene.String()
+    description = graphene.String()
     cover = Upload()
 
   training_apparatus = graphene.Field(TrainingApparatusType)
@@ -409,12 +410,14 @@ class CreateTrainingApparatus(graphene.Mutation):
   def mutate(
       self,
       info,
-      cover,
       title,
+      description,
+      cover=None,
     ):
     training_apparatus = TrainingApparatus.objects.create(
       title = title,
-      cover = cover
+      cover = cover,
+      description = description
     )
 
     training_apparatus.save()
