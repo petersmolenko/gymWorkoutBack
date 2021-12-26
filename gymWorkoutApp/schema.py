@@ -122,6 +122,34 @@ class CreateWorkout(graphene.Mutation):
       workout=workout
     )
 
+class CommentWorkoutPart(graphene.Mutation):
+    class Arguments:
+        id = graphene.ID()
+        comment = graphene.String()
+
+    workoutPart = graphene.Field(WorkoutPartType)
+
+
+    def mutate(
+          self,
+          info,
+          id,
+          comment
+        ):
+        workoutPart = WorkoutPart.objects.get(pk = id)
+
+        if (workoutPart is None):
+            return DeleteWorkout(workoutPart=None)
+
+
+        workoutPart.comment = comment
+
+        workoutPart.save()
+
+        return CommentWorkoutPart(
+          workoutPart=workoutPart
+        )
+
 
 class UpdateWorkout(graphene.Mutation):
   class Arguments:

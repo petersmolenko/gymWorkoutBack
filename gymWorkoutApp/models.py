@@ -49,6 +49,7 @@ class WorkoutPart(models.Model):
     repetitions_number = models.IntegerField()
     sort_order = models.IntegerField()
     completed = models.BooleanField()
+    comment = models.CharField(max_length=500)
 
     def __str__(self):
         return self.title
