@@ -55,6 +55,12 @@ class Query(graphene.ObjectType):
         return Exercise.objects.get(pk=id)
 
     # Workout parts queries
+    workout_parts = graphene.List(WorkoutPartType)
+
+    def resolve_workout_parts(self, info, **kwargs):
+        return WorkoutPart.objects.all()
+
+    # Workout parts queries
     workout_parts_by_workout = graphene.List(WorkoutPartType, id=graphene.ID())
 
     def resolve_workout_parts_by_workout(self, info, id):
@@ -310,21 +316,22 @@ class UpdateWorkoutPart(graphene.Mutation):
 
 class DeleteWorkoutPart(graphene.Mutation):
   class Arguments:
-    id = graphene.ID()
+    ids = graphene.List(graphene.ID)
 
   ok = graphene.Boolean()
 
   def mutate(
       self,
       info,
-      id
+      ids=[]
     ):
     try:
-      workoutPart = WorkoutPart.objects.get(pk=id)
+      for i in range(len(ids)):
+          workoutPart = WorkoutPart.objects.get(pk=ids[i])
 
-      if workoutPart is not None:
-          workoutPart.delete()
-          return DeleteWorkoutPart(ok=True)
+          if workoutPart is not None:
+              workoutPart.delete()
+      return DeleteWorkoutPart(ok=True)
     except:
         return DeleteWorkoutPart(ok=False)
     
