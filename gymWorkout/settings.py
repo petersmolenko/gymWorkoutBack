@@ -127,7 +127,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 GRAPHENE = {
-    'SCHEMA': 'gymWorkoutApp.schema.schema',
+    'SCHEMA': 'gymWorkoutApp.schema.schema.schema',
 }
 
 CORS_ORIGIN_ALLOW_ALL = False
