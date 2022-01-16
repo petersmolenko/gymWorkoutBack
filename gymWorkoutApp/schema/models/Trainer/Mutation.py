@@ -78,3 +78,8 @@ class DeleteTrainingApparatus(graphene.Mutation):
 
     return DeleteTrainingApparatus(ok=False)
 
+class TrainerMutation(graphene.ObjectType):
+    create_training_apparatus = CreateTrainingApparatus.Field()
+    update_training_apparatus = UpdateTrainingApparatus.Field()
+    delete_training_apparatus = DeleteTrainingApparatus.Field()
+

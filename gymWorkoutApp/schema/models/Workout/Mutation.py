@@ -166,3 +166,10 @@ class AddWorkoutPartsToWorkout(graphene.Mutation):
     except:
       print('error')
       return AddWorkoutPartsToWorkout(workout=None)
+
+
+class WorkoutMutation(graphene.ObjectType):
+    create_workout = CreateWorkout.Field()
+    update_workout = UpdateWorkout.Field()
+    delete_workout = DeleteWorkout.Field()
+    add_workout_part_to_workout = AddWorkoutPartsToWorkout.Field()
