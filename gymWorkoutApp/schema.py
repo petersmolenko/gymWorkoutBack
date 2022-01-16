@@ -1,7 +1,23 @@
+# *
+# Imports
+# *
+
 import graphene
 from graphene_django import DjangoObjectType
 from graphene_file_upload.scalars import Upload
 from .models import Workout, WorkoutPart, Exercise, TrainingApparatus, Profile
+
+# *
+# Helpers
+# *
+
+# Служит для удаления сущностей выбранной модели по их ID
+def deleteItemsOf(model, ids):
+    for i in range(len(ids)):
+      workoutPart = model.objects.get(pk=ids[i])
+
+      if workoutPart is not None:
+          workoutPart.delete()
 
 
 class WorkoutType(DjangoObjectType):
@@ -98,7 +114,7 @@ class CreateWorkout(graphene.Mutation):
     workout_parts = graphene.List(graphene.ID)
     completed = graphene.Boolean()
     in_process = graphene.Boolean()
-    date = graphene.types.datetime.DateTime()
+    date = graphene.String()
 
   workout = graphene.Field(WorkoutType)
 
@@ -110,14 +126,12 @@ class CreateWorkout(graphene.Mutation):
       workout_parts=None,
       completed=False,
       in_process=False,
-      date=None
     ):
     workout = Workout.objects.create(
       title = title,
       description = description,
       completed = completed,
       in_process = in_process,
-      date=date
     )
 
     if workout_parts is not None: set_workout_parts(workout, workout_parts)
@@ -211,7 +225,7 @@ class DeleteWorkout(graphene.Mutation):
         workout.delete()
 
     return DeleteWorkout(
-      workout=workout
+      workout=id
     )
 
 class AddWorkoutPartToWorkout(graphene.Mutation):
@@ -314,29 +328,22 @@ class UpdateWorkoutPart(graphene.Mutation):
       workoutPart=workoutPart
     )
 
-class DeleteWorkoutPart(graphene.Mutation):
+# Удаляет сущности WorkoutParts (этап тренировки) по их ID
+class DeleteWorkoutParts(graphene.Mutation):
   class Arguments:
     ids = graphene.List(graphene.ID)
 
-  ok = graphene.Boolean()
+  ids = graphene.List(graphene.ID)
 
-  def mutate(
-      self,
-      info,
-      ids=[]
-    ):
+  def mutate(self, info, ids=[]):
     try:
-      for i in range(len(ids)):
-          workoutPart = WorkoutPart.objects.get(pk=ids[i])
-
-          if workoutPart is not None:
-              workoutPart.delete()
-      return DeleteWorkoutPart(ok=True)
+      deleteItemsOf(WorkoutPart, ids)
+      #
+      return DeleteWorkoutParts(ids=ids)
     except:
-        return DeleteWorkoutPart(ok=False)
-    
+      return DeleteWorkoutParts(ids=[])
 
-    return DeleteWorkoutPart(ok=False)
+    return DeleteWorkoutParts(ids=ids)
 
 # Exercise mutations
 
@@ -518,7 +525,7 @@ class Mutation(graphene.ObjectType):
   # Workout parts
   create_workout_part = CreateWorkoutPart.Field()
   update_workout_part = UpdateWorkoutPart.Field()
-  delete_workout_part = DeleteWorkoutPart.Field()
+  delete_workout_parts = DeleteWorkoutParts.Field()
   # Exercise
   create_exercise = CreateExercise.Field()
   update_exercise = UpdateExercise.Field()
