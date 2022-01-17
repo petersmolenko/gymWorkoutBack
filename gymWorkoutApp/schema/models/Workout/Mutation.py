@@ -127,7 +127,7 @@ class DeleteWorkout(graphene.Mutation):
   class Arguments:
     id = graphene.ID()
 
-  workout = graphene.Field(WorkoutType)
+  id = graphene.ID()
 
   def mutate(
       self,
@@ -136,10 +136,12 @@ class DeleteWorkout(graphene.Mutation):
     ):
     workout = Workout.objects.get(pk=id)
     if workout is not None:
+        for w_p in workout.workout_parts.all():
+            w_p.delete()
         workout.delete()
 
     return DeleteWorkout(
-      workout=id
+      id=id
     )
 
 # Добавляет для тренировки этапы
