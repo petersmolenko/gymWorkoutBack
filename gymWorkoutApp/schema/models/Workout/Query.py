@@ -7,6 +7,7 @@ class WorkoutQuery(graphene.ObjectType):
     workouts = graphene.List(WorkoutType)
     completed_workouts = graphene.List(WorkoutType)
     active_workouts = graphene.Field(WorkoutType)
+    workout = graphene.Field(WorkoutType, id=graphene.ID())
 
     # Получаем все тренировки
     def resolve_workouts(self, info, **kwargs):
@@ -19,3 +20,7 @@ class WorkoutQuery(graphene.ObjectType):
     # Получаем все завершенные тренировки
     def resolve_completed_workouts(self, info, **kwargs):
         return Workout.objects.filter(completed=True)
+
+    # Получаем тренировку по id
+    def resolve_workout(self, info, id):
+        return Workout.objects.get(pk=id)

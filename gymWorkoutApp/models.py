@@ -42,7 +42,7 @@ class Exercise(models.Model):
         return self.title
 
 class WorkoutPart(models.Model):
-    title = models.CharField(max_length=50, unique=True)
+    title = models.CharField(max_length=50)
     description = models.TextField()
     exercise = models.ForeignKey(Exercise, on_delete=models.PROTECT)
     weight = models.FloatField(max_length=1000)
@@ -55,9 +55,19 @@ class WorkoutPart(models.Model):
         return self.title
 
 class Workout(models.Model):
-    title = models.CharField(max_length=50, unique=True)
+    WORKOUT_STATUS = [
+            ('free', 'Свободная'),
+            ('in_process', 'В процессе'),
+            ('completed', 'Завершенная'),
+    ]
+    title = models.CharField(max_length=50)
     description = models.TextField(blank=True)
     workout_parts = models.ManyToManyField(WorkoutPart, blank=True)
+    status = models.CharField(
+                     max_length=20,
+                     choices=WORKOUT_STATUS,
+                     default='free',
+                 )
     completed = models.BooleanField()
     in_process = models.BooleanField()
     date = models.DateField(auto_now_add=True, blank=True)
