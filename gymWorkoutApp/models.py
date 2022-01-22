@@ -16,7 +16,7 @@ class Profile(models.Model):
 class TrainingApparatus(models.Model):
     title = models.CharField(max_length=50, unique=True)
     description = models.TextField(default='')
-    cover = models.ImageField(upload_to='images/')
+    cover = models.ImageField(upload_to='images/', blank=True)
 
     def __str__(self):
         return self.title
@@ -49,16 +49,16 @@ class WorkoutPart(models.Model):
     repetitions_number = models.IntegerField()
     sort_order = models.IntegerField()
     completed = models.BooleanField()
-    comment = models.CharField(max_length=500)
+    comment = models.CharField(max_length=500, default='')
 
     def __str__(self):
         return self.title
 
 class Workout(models.Model):
     WORKOUT_STATUS = [
-            ('free', 'Свободная'),
-            ('in_process', 'В процессе'),
-            ('completed', 'Завершенная'),
+            ("b", 'Свободная'),
+            ("a", 'В процессе'),
+            ("c", 'Завершенная'),
     ]
     title = models.CharField(max_length=50)
     description = models.TextField(blank=True)
@@ -66,11 +66,12 @@ class Workout(models.Model):
     status = models.CharField(
                      max_length=20,
                      choices=WORKOUT_STATUS,
-                     default='free',
+                     default="b",
                  )
-    completed = models.BooleanField()
-    in_process = models.BooleanField()
     date = models.DateField(auto_now_add=True, blank=True)
+
+    class Meta:
+            ordering = ['status', 'date']
 
 
     def __str__(self):

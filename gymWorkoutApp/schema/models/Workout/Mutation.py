@@ -2,10 +2,10 @@ import graphene
 from .Type import WorkoutType
 from ..WorkoutPart.Type import WorkoutPartType
 from gymWorkoutApp.models import Workout, WorkoutPart
+from graphene_django.types import DjangoObjectType
 
 # Устанавливет для выбранной тренировки новый этапы
 def set_workout_parts(workout, workout_parts_ids):
-    print('curva')
     workout_parts_set = []
 
     for w_p in workout_parts_ids:
@@ -13,7 +13,6 @@ def set_workout_parts(workout, workout_parts_ids):
         workout_parts_set.append(w_p_object)
 
     workout.workout_parts.set(workout_parts_set)
-    print('dosooooo', workout_parts_ids)
 
     workout.save()
 
@@ -23,8 +22,6 @@ class CreateWorkout(graphene.Mutation):
     title = graphene.String()
     description = graphene.String()
     workoutParts = graphene.List(graphene.ID)
-    completed = graphene.Boolean()
-    in_process = graphene.Boolean()
     date = graphene.String()
 
   workout = graphene.Field(WorkoutType)
@@ -34,18 +31,13 @@ class CreateWorkout(graphene.Mutation):
       info,
       title,
       description,
-      workoutParts,
-      completed=False,
-      in_process=False,
-      **kw
+      workoutParts
     ):
     workout = Workout.objects.create(
       title = title,
       description = description,
-      in_process = in_process,
-      completed = completed
+      status = 'b',
     )
-    print('core!!!', kw)
     if workoutParts is not None: set_workout_parts(workout, workoutParts)
 
     workout.save()
@@ -81,6 +73,61 @@ class CommentWorkoutPart(graphene.Mutation):
 
         return CommentWorkoutPart(
           workoutPart=workoutPart
+        )
+
+
+
+# Добавляет комментария для этапа тренировки
+class StartWorkout(graphene.Mutation):
+    class Arguments:
+        id = graphene.ID()
+
+    workout = graphene.Field(WorkoutType)
+
+    def mutate(
+          self,
+          info,
+          id
+        ):
+        workout = Workout.objects.get(pk = id)
+
+        workout.status = "a"
+        workout.save()
+
+        return StartWorkout(
+          workout=workout
+        )
+
+# Добавляет комментария для этапа тренировки
+class CompleteWorkoutPart(graphene.Mutation):
+    class Arguments:
+        id = graphene.ID()
+        wp_id = graphene.ID()
+
+    workout = graphene.Field(WorkoutType)
+
+    def mutate(
+          self,
+          info,
+          id,
+          wp_id
+        ):
+        workout = Workout.objects.get(pk = id)
+        workoutPart = WorkoutPart.objects.get(pk = wp_id)
+        workoutPart.completed = True
+        workoutPart.save()
+        workout_status = "c"
+
+        for wp in workout.workout_parts.all():
+            if (not wp.completed):
+                workout_status = "b"
+                break
+
+        workout.status = workout_status
+        workout.save()
+
+        return CompleteWorkoutPart(
+          workout=workout
         )
 
 # Обновляет тренировку
@@ -174,4 +221,6 @@ class WorkoutMutation(graphene.ObjectType):
     create_workout = CreateWorkout.Field()
     update_workout = UpdateWorkout.Field()
     delete_workout = DeleteWorkout.Field()
+    start_workout = StartWorkout.Field()
+    complete_workout_part = CompleteWorkoutPart.Field()
     add_workout_part_to_workout = AddWorkoutPartsToWorkout.Field()

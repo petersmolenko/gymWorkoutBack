@@ -1,6 +1,6 @@
 import graphene
 from .Type import WorkoutPartType
-from gymWorkoutApp.models import WorkoutPart
+from gymWorkoutApp.models import WorkoutPart, Exercise
 
 # Служит для удаления сущностей выбранной модели по их ID
 def deleteItemsOf(model, ids):
